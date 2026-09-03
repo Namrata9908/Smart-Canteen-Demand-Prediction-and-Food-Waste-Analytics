@@ -4,6 +4,7 @@ import plotly.express as px
 import joblib
 from pathlib import Path
 
+
 # ============================================================
 # PAGE CONFIGURATION
 # ============================================================
@@ -14,6 +15,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
 
 # ============================================================
 # PROJECT PATHS
@@ -43,43 +45,93 @@ CENTER_INFO_PATH = (
     / "fulfilment_center_info.csv"
 )
 
+
 # ============================================================
-# STYLING
+# CUSTOM STYLING
 # ============================================================
 
 st.markdown(
     """
-    <style>
+<style>
 
-    .main-title {
-        font-size: 42px;
-        font-weight: 700;
-        margin-bottom: 5px;
-    }
+.main-title {
+    font-size: 42px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
 
-    .subtitle {
-        font-size: 17px;
-        opacity: 0.75;
-        margin-bottom: 25px;
-    }
+.subtitle {
+    font-size: 17px;
+    opacity: 0.75;
+    margin-bottom: 25px;
+}
 
-    .section-title {
-        font-size: 28px;
-        font-weight: 650;
-        margin-top: 25px;
-        margin-bottom: 15px;
-    }
+.section-title {
+    font-size: 28px;
+    font-weight: 650;
+    margin-top: 25px;
+    margin-bottom: 15px;
+}
 
-    div[data-testid="stMetric"] {
-        padding: 18px 20px;
-        border-radius: 12px;
-        border: 1px solid rgba(128,128,128,0.20);
-    }
+div[data-testid="stMetric"] {
+    padding: 18px 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(128,128,128,0.20);
+}
 
-    </style>
-    """,
+.insight-card {
+    padding: 18px 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(128,128,128,0.20);
+    background: rgba(128,128,128,0.05);
+    min-height: 115px;
+}
+
+.insight-title {
+    font-size: 15px;
+    font-weight: 650;
+    margin-bottom: 8px;
+}
+
+.insight-value {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.insight-description {
+    font-size: 13px;
+    opacity: 0.70;
+}
+
+.model-card {
+    padding: 18px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(128,128,128,0.20);
+    background: rgba(128,128,128,0.05);
+    text-align: center;
+    min-height: 115px;
+}
+
+.model-card-title {
+    font-size: 13px;
+    opacity: 0.70;
+    margin-bottom: 8px;
+}
+
+.model-card-value {
+    font-size: 23px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+</style>
+""",
     unsafe_allow_html=True
 )
+
 
 # ============================================================
 # HELPER FUNCTIONS
@@ -91,7 +143,6 @@ def load_csv(filename):
     path = ANALYTICS_DIR / filename
 
     if not path.exists():
-
         raise FileNotFoundError(
             f"Required file not found: {path}"
         )
@@ -103,7 +154,6 @@ def load_csv(filename):
 def load_model():
 
     if not MODEL_PATH.exists():
-
         raise FileNotFoundError(
             f"Trained model not found: {MODEL_PATH}"
         )
@@ -114,7 +164,6 @@ def load_model():
 def format_number(value):
 
     if pd.isna(value):
-
         return "0"
 
     return f"{int(round(value)):,}"
@@ -123,11 +172,9 @@ def format_number(value):
 def classify_demand(value):
 
     if value >= 500:
-
         return "High"
 
     elif value >= 150:
-
         return "Medium"
 
     return "Low"
@@ -136,11 +183,9 @@ def classify_demand(value):
 def classify_waste_risk(value):
 
     if value >= 500:
-
         return "High Risk"
 
     elif value >= 150:
-
         return "Medium Risk"
 
     return "Low Risk"
@@ -151,12 +196,6 @@ def classify_waste_risk(value):
 # ============================================================
 
 def predict_new_month(uploaded_df):
-
-    """
-    Validate new-month raw input, merge metadata,
-    create the same features used during training,
-    and generate demand predictions.
-    """
 
     required_columns = [
         "id",
@@ -170,7 +209,7 @@ def predict_new_month(uploaded_df):
     ]
 
     # --------------------------------------------------------
-    # Check required columns
+    # Required column validation
     # --------------------------------------------------------
 
     missing_columns = [
@@ -254,8 +293,22 @@ def predict_new_month(uploaded_df):
         )
 
     # --------------------------------------------------------
-    # Load metadata
+    # Metadata files
     # --------------------------------------------------------
+
+    if not MEAL_INFO_PATH.exists():
+
+        raise FileNotFoundError(
+            f"Meal information file not found: "
+            f"{MEAL_INFO_PATH}"
+        )
+
+    if not CENTER_INFO_PATH.exists():
+
+        raise FileNotFoundError(
+            f"Fulfilment center information file not found: "
+            f"{CENTER_INFO_PATH}"
+        )
 
     meal_info = pd.read_csv(
         MEAL_INFO_PATH
@@ -266,7 +319,7 @@ def predict_new_month(uploaded_df):
     )
 
     # --------------------------------------------------------
-    # Merge meal information
+    # Merge meal metadata
     # --------------------------------------------------------
 
     df = df.merge(
@@ -276,7 +329,7 @@ def predict_new_month(uploaded_df):
     )
 
     # --------------------------------------------------------
-    # Merge center information
+    # Merge center metadata
     # --------------------------------------------------------
 
     df = df.merge(
@@ -363,8 +416,7 @@ def predict_new_month(uploaded_df):
     # orders_per_area is NOT created here.
     #
     # It depends on num_orders, which is the target.
-    # Creating it during prediction would cause
-    # target leakage.
+    # Creating it during prediction would cause target leakage.
 
     # ========================================================
     # MODEL FEATURES
@@ -404,7 +456,7 @@ def predict_new_month(uploaded_df):
     ].copy()
 
     # ========================================================
-    # LOAD TRAINED MODEL
+    # LOAD MODEL
     # ========================================================
 
     model = load_model()
@@ -418,7 +470,6 @@ def predict_new_month(uploaded_df):
     )
 
     df["predicted_num_orders"] = (
-
         pd.Series(
             predictions,
             index=df.index
@@ -426,11 +477,10 @@ def predict_new_month(uploaded_df):
         .clip(lower=0)
         .round()
         .astype(int)
-
     )
 
     # ========================================================
-    # DEMAND CLASSIFICATION
+    # DEMAND LEVEL
     # ========================================================
 
     df["demand_level"] = (
@@ -610,62 +660,28 @@ selected_center_types = st.sidebar.multiselect(
 
 
 # ============================================================
-# SIDEBAR INFO
+# SIDEBAR INFORMATION
 # ============================================================
 
 st.sidebar.markdown("---")
 
 st.sidebar.info(
     """
-    **Dashboard Scope**
+**Dashboard Scope**
 
-    • ML-based demand predictions
+• ML-based demand predictions
 
-    • Category performance
+• Category performance
 
-    • Meal-level demand
+• Meal-level demand
 
-    • Center-level demand
+• Center-level demand
 
-    • Potential food-waste risk
+• Potential food-waste risk
 
-    • New-month prediction
-    """
+• New-month prediction
+"""
 )
-
-
-# ============================================================
-# APPLY FILTERS
-# ============================================================
-
-filtered_category = category_df[
-    category_df["category"]
-    .isin(selected_categories)
-].copy()
-
-
-filtered_meal = meal_df[
-    meal_df["category"]
-    .isin(selected_categories)
-].copy()
-
-
-filtered_meal_waste = meal_waste_df[
-    meal_waste_df["category"]
-    .isin(selected_categories)
-].copy()
-
-
-filtered_center = center_df[
-    center_df["center_type"]
-    .isin(selected_center_types)
-].copy()
-
-
-filtered_center_waste = center_waste_df[
-    center_waste_df["center_type"]
-    .isin(selected_center_types)
-].copy()
 
 
 # ============================================================
@@ -686,13 +702,41 @@ if (
 
 
 # ============================================================
+# APPLY FILTERS
+# ============================================================
+
+filtered_category = category_df[
+    category_df["category"]
+    .isin(selected_categories)
+].copy()
+
+filtered_meal = meal_df[
+    meal_df["category"]
+    .isin(selected_categories)
+].copy()
+
+filtered_meal_waste = meal_waste_df[
+    meal_waste_df["category"]
+    .isin(selected_categories)
+].copy()
+
+filtered_center = center_df[
+    center_df["center_type"]
+    .isin(selected_center_types)
+].copy()
+
+filtered_center_waste = center_waste_df[
+    center_waste_df["center_type"]
+    .isin(selected_center_types)
+].copy()
+
+
+# ============================================================
 # HEADER
 # ============================================================
 
 st.markdown(
-    '<div class="main-title">'
-    '🍱 Smart Canteen Analytics'
-    '</div>',
+    '<div class="main-title">🍱 Smart Canteen Analytics</div>',
     unsafe_allow_html=True
 )
 
@@ -744,7 +788,6 @@ high_risk_count = (
 
 col1, col2, col3, col4 = st.columns(4)
 
-
 with col1:
 
     st.metric(
@@ -753,7 +796,6 @@ with col1:
             total_predicted_orders
         )
     )
-
 
 with col2:
 
@@ -764,14 +806,12 @@ with col2:
         )
     )
 
-
 with col3:
 
     st.metric(
         "🍱 Categories",
         number_categories
     )
-
 
 with col4:
 
@@ -782,13 +822,131 @@ with col4:
 
 
 # ============================================================
+# EXECUTIVE SUMMARY
+# ============================================================
+
+st.markdown(
+    '<div class="section-title">💡 Executive Summary</div>',
+    unsafe_allow_html=True
+)
+
+
+# ------------------------------------------------------------
+# Highest-demand category
+# ------------------------------------------------------------
+
+top_category_row = (
+    filtered_category
+    .sort_values(
+        "total_predicted_orders",
+        ascending=False
+    )
+    .head(1)
+)
+
+if not top_category_row.empty:
+
+    top_category_name = str(
+        top_category_row.iloc[0]["category"]
+    )
+
+    top_category_orders = format_number(
+        top_category_row.iloc[0]["total_predicted_orders"]
+    )
+
+else:
+
+    top_category_name = "N/A"
+    top_category_orders = "0"
+
+
+# ------------------------------------------------------------
+# Peak week
+# ------------------------------------------------------------
+
+peak_week_row = (
+    weekly_df
+    .sort_values(
+        "total_predicted_orders",
+        ascending=False
+    )
+    .head(1)
+)
+
+if not peak_week_row.empty:
+
+    peak_week = int(
+        peak_week_row.iloc[0]["week"]
+    )
+
+    peak_week_orders = format_number(
+        peak_week_row.iloc[0]["total_predicted_orders"]
+    )
+
+else:
+
+    peak_week = "N/A"
+    peak_week_orders = "0"
+
+
+# ============================================================
+# EXECUTIVE SUMMARY CARDS
+#
+# IMPORTANT FIX:
+# HTML starts immediately after the triple quote.
+# No unwanted indentation before <div>.
+# ============================================================
+
+insight_col1, insight_col2, insight_col3 = st.columns(3)
+
+
+with insight_col1:
+
+    st.markdown(
+        f"""<div class="insight-card">
+<div class="insight-title">🍱 Highest-Demand Category</div>
+<div class="insight-value">{top_category_name}</div>
+<div class="insight-description">{top_category_orders} predicted orders</div>
+</div>""",
+        unsafe_allow_html=True
+    )
+
+
+with insight_col2:
+
+    st.markdown(
+        f"""<div class="insight-card">
+<div class="insight-title">📈 Peak Demand Week</div>
+<div class="insight-value">Week {peak_week}</div>
+<div class="insight-description">{peak_week_orders} predicted orders</div>
+</div>""",
+        unsafe_allow_html=True
+    )
+
+
+with insight_col3:
+
+    st.markdown(
+        f"""<div class="insight-card">
+<div class="insight-title">⚠️ High-Risk Meals</div>
+<div class="insight-value">{int(high_risk_count)}</div>
+<div class="insight-description">Meals classified as high potential risk</div>
+</div>""",
+        unsafe_allow_html=True
+    )
+
+
+st.caption(
+    "Insights update automatically based on the selected dashboard filters."
+)
+
+
+# ============================================================
 # WEEKLY DEMAND TREND
 # ============================================================
 
 st.markdown(
-    '<div class="section-title">'
-    '📊 Weekly Demand Trend'
-    '</div>',
+    '<div class="section-title">📊 Weekly Demand Trend</div>',
     unsafe_allow_html=True
 )
 
@@ -804,18 +962,15 @@ weekly_plot = (
 
 fig_weekly = px.line(
     weekly_plot,
-
     x="week",
-
     y="total_predicted_orders",
-
     markers=True,
-
     labels={
         "week": "Week",
         "total_predicted_orders":
             "Total Predicted Orders"
-    }
+    },
+    title="Weekly Predicted Demand"
 )
 
 fig_weekly.update_layout(
@@ -834,9 +989,7 @@ st.plotly_chart(
 # ============================================================
 
 st.markdown(
-    '<div class="section-title">'
-    '🍱 Category-wise Demand'
-    '</div>',
+    '<div class="section-title">🍱 Category-wise Demand</div>',
     unsafe_allow_html=True
 )
 
@@ -854,23 +1007,16 @@ with col1:
     )
 
     fig_category_total = px.bar(
-
         category_total,
-
         x="total_predicted_orders",
-
         y="category",
-
         orientation="h",
-
         labels={
             "total_predicted_orders":
                 "Predicted Orders",
-
             "category":
                 "Category"
         },
-
         title="Total Predicted Orders"
     )
 
@@ -895,23 +1041,16 @@ with col2:
     )
 
     fig_category_avg = px.bar(
-
         category_average,
-
         x="average_predicted_orders",
-
         y="category",
-
         orientation="h",
-
         labels={
             "average_predicted_orders":
                 "Average Predicted Orders",
-
             "category":
                 "Category"
         },
-
         title="Average Predicted Orders"
     )
 
@@ -930,68 +1069,46 @@ with col2:
 # ============================================================
 
 st.markdown(
-    '<div class="section-title">'
-    '🍽️ Top 10 Meals'
-    '</div>',
+    '<div class="section-title">🍽️ Top 10 Meals</div>',
     unsafe_allow_html=True
 )
 
 top_meals = (
-
     filtered_meal
-
     .sort_values(
         "total_predicted_orders",
         ascending=False
     )
-
     .head(10)
-
     .copy()
 )
 
 top_meals["meal_label"] = (
-
     "Meal "
-    + top_meals[
-        "meal_id"
-    ].astype(str)
-
+    + top_meals["meal_id"].astype(str)
     + " | "
-
-    + top_meals[
-        "category"
-    ]
+    + top_meals["category"]
 )
 
-
 fig_meals = px.bar(
-
     top_meals.sort_values(
         "total_predicted_orders",
         ascending=True
     ),
-
     x="total_predicted_orders",
-
     y="meal_label",
-
     orientation="h",
-
     hover_data=[
         "meal_id",
         "category",
         "cuisine"
     ],
-
     labels={
         "total_predicted_orders":
             "Predicted Orders",
-
         "meal_label":
             "Meal"
     },
-
     title="Top 10 Meals by Predicted Demand"
 )
 
@@ -1010,67 +1127,45 @@ st.plotly_chart(
 # ============================================================
 
 st.markdown(
-    '<div class="section-title">'
-    '🏢 Top 10 Centers'
-    '</div>',
+    '<div class="section-title">🏢 Top 10 Centers</div>',
     unsafe_allow_html=True
 )
 
 top_centers = (
-
     filtered_center
-
     .sort_values(
         "total_predicted_orders",
         ascending=False
     )
-
     .head(10)
-
     .copy()
 )
 
 top_centers["center_label"] = (
-
     "Center "
-    + top_centers[
-        "center_id"
-    ].astype(str)
-
+    + top_centers["center_id"].astype(str)
     + " | "
-
-    + top_centers[
-        "center_type"
-    ]
+    + top_centers["center_type"]
 )
 
-
 fig_centers = px.bar(
-
     top_centers.sort_values(
         "total_predicted_orders",
         ascending=True
     ),
-
     x="total_predicted_orders",
-
     y="center_label",
-
     orientation="h",
-
     hover_data=[
         "center_id",
         "center_type"
     ],
-
     labels={
         "total_predicted_orders":
             "Predicted Orders",
-
         "center_label":
             "Center"
     },
-
     title="Top 10 Centers by Predicted Demand"
 )
 
@@ -1085,91 +1180,184 @@ st.plotly_chart(
 
 
 # ============================================================
+# MODEL PERFORMANCE
+# ============================================================
+
+st.markdown("---")
+
+st.markdown(
+    '<div class="section-title">🤖 Model Performance</div>',
+    unsafe_allow_html=True
+)
+
+st.caption(
+    "Performance of the trained Random Forest model "
+    "on the held-out test set."
+)
+
+model_col1, model_col2, model_col3, model_col4 = (
+    st.columns(4)
+)
+
+
+# ============================================================
+# MODEL CARD 1
+# ============================================================
+
+with model_col1:
+
+    st.markdown(
+        """<div class="model-card">
+<div class="model-card-title">🤖 Model</div>
+<div class="model-card-value">Random Forest</div>
+</div>""",
+        unsafe_allow_html=True
+    )
+
+
+# ============================================================
+# MODEL CARD 2
+# ============================================================
+
+with model_col2:
+
+    st.markdown(
+        """<div class="model-card">
+<div class="model-card-title">📊 R² Score</div>
+<div class="model-card-value">0.867</div>
+</div>""",
+        unsafe_allow_html=True
+    )
+
+
+# ============================================================
+# MODEL CARD 3
+# ============================================================
+
+with model_col3:
+
+    st.markdown(
+        """<div class="model-card">
+<div class="model-card-title">📉 MAE</div>
+<div class="model-card-value">69.2</div>
+</div>""",
+        unsafe_allow_html=True
+    )
+
+
+# ============================================================
+# MODEL CARD 4
+# ============================================================
+
+with model_col4:
+
+    st.markdown(
+        """<div class="model-card">
+<div class="model-card-title">📐 RMSE</div>
+<div class="model-card-value">142.55</div>
+</div>""",
+        unsafe_allow_html=True
+    )
+
+
+st.caption(
+    "R², MAE and RMSE are calculated on the held-out test set "
+    "and reflect model performance before deployment."
+)
+
+
+# ============================================================
 # FOOD-WASTE RISK
 # ============================================================
 
 st.markdown("---")
 
-st.header(
-    "♻️ Potential Food-Waste Risk Analytics"
+st.markdown(
+    '<div class="section-title">♻️ Potential Food-Waste Risk Analytics</div>',
+    unsafe_allow_html=True
 )
 
 st.info(
     """
-    **Important:** Food-waste risk is a demand-based proxy.
+**Important:** Food-waste risk is a demand-based proxy.
 
-    The current dataset does not contain prepared quantity
-    or actual waste quantity, so this dashboard does not
-    calculate actual food-waste percentage.
-    """
+The current dataset does not contain prepared quantity
+or actual waste quantity, so this dashboard does not
+calculate actual food-waste percentage.
+"""
 )
 
 
 # ============================================================
-# CENTER WASTE RISK
+# TOP 10 CENTER WASTE RISK
 # ============================================================
 
 st.subheader(
-    "Center-wise Potential Food-Waste Risk"
+    "Top 10 Centers — Potential Food-Waste Risk"
 )
 
-center_risk_plot = (
+st.caption(
+    "Centers with the highest predicted demand and corresponding "
+    "potential food-waste risk."
+)
 
+top_risk_centers = (
     filtered_center_waste
-
     .sort_values(
         "total_predicted_orders",
-        ascending=True
+        ascending=False
     )
-
+    .head(10)
     .copy()
 )
 
-center_risk_plot["center_label"] = (
-
+top_risk_centers["center_label"] = (
     "Center "
-
-    + center_risk_plot[
-        "center_id"
-    ].astype(str)
-
+    + top_risk_centers["center_id"].astype(str)
     + " | "
-
-    + center_risk_plot[
-        "center_type"
-    ]
+    + top_risk_centers["center_type"]
 )
 
 
 fig_center_risk = px.bar(
-
-    center_risk_plot,
-
+    top_risk_centers,
     x="total_predicted_orders",
-
     y="center_label",
-
     orientation="h",
-
+    color="potential_waste_risk",
+    color_discrete_map={
+        "High Risk": "#EF4444",
+        "Medium Risk": "#F59E0B",
+        "Low Risk": "#22C55E"
+    },
     hover_data=[
         "center_id",
         "center_type",
         "potential_waste_risk"
     ],
-
     labels={
         "total_predicted_orders":
             "Predicted Orders",
-
         "center_label":
-            "Center"
+            "Center",
+        "potential_waste_risk":
+            "Risk Level"
     },
-
     title="Potential Food-Waste Risk by Center"
 )
 
 fig_center_risk.update_layout(
-    height=650
+    height=500,
+    legend_title_text="Risk Level",
+    margin=dict(
+        l=20,
+        r=20,
+        t=70,
+        b=20
+    ),
+    yaxis=dict(
+        categoryorder="total ascending"
+    )
 )
 
 st.plotly_chart(
@@ -1187,13 +1375,10 @@ st.subheader(
 )
 
 risk_counts = (
-
     filtered_meal_waste[
         "potential_waste_risk"
     ]
-
     .value_counts()
-
     .reset_index()
 )
 
@@ -1202,30 +1387,29 @@ risk_counts.columns = [
     "meal_count"
 ]
 
-
 fig_risk = px.pie(
-
     risk_counts,
-
     names="potential_waste_risk",
-
     values="meal_count",
-
     hole=0.45,
-
     title="Meal-wise Potential Food-Waste Risk",
-
+    color="potential_waste_risk",
+    color_discrete_map={
+        "High Risk": "#EF4444",
+        "Medium Risk": "#F59E0B",
+        "Low Risk": "#22C55E"
+    },
     labels={
         "potential_waste_risk":
             "Risk Level",
-
         "meal_count":
             "Number of Meals"
     }
 )
 
 fig_risk.update_layout(
-    height=450
+    height=450,
+    legend_title_text="Risk Level"
 )
 
 st.plotly_chart(
@@ -1243,7 +1427,6 @@ st.subheader(
 )
 
 high_risk_meals = (
-
     filtered_meal_waste[
         filtered_meal_waste[
             "potential_waste_risk"
@@ -1253,7 +1436,6 @@ high_risk_meals = (
         .str.lower()
         == "high risk"
     ]
-
     .copy()
 )
 
@@ -1264,7 +1446,6 @@ high_risk_meals = (
         ascending=False
     )
 )
-
 
 if high_risk_meals.empty:
 
@@ -1288,42 +1469,38 @@ else:
 
 st.markdown("---")
 
-st.header(
-    "📤 New Month Demand Prediction"
+st.markdown(
+    '<div class="section-title">📤 New Month Demand Prediction</div>',
+    unsafe_allow_html=True
 )
 
 st.markdown(
     """
-    Upload a new month's raw canteen demand CSV.
+Upload a new month's raw canteen demand CSV.
 
-    The dashboard validates the input and uses the
-    **existing trained Random Forest model** to predict demand.
-    """
+The dashboard validates the input and uses the
+**existing trained Random Forest model** to predict demand.
+"""
 )
 
 st.warning(
     """
-    Required columns:
+**Required columns:**
 
-    `id`, `week`, `center_id`, `meal_id`,
-    `checkout_price`, `base_price`,
-    `emailer_for_promotion`, `homepage_featured`
+`id`, `week`, `center_id`, `meal_id`,
+`checkout_price`, `base_price`,
+`emailer_for_promotion`, `homepage_featured`
 
-    `num_orders` is not required because it is the target
-    variable being predicted.
-    """
+`num_orders` is not required because it is the target
+variable being predicted.
+"""
 )
 
 
 uploaded_file = st.file_uploader(
     "Upload New Month CSV",
-
     type=["csv"],
-
-    help=(
-        "Upload the raw input CSV "
-        "for a new month."
-    )
+    help="Upload the raw input CSV for a new month."
 )
 
 
@@ -1340,15 +1517,12 @@ if uploaded_file is not None:
         )
 
         st.write(
-            f"Uploaded rows: "
-            f"**{len(uploaded_df):,}**"
+            f"Uploaded rows: **{len(uploaded_df):,}**"
         )
 
         st.dataframe(
             uploaded_df.head(10),
-
             width="stretch",
-
             hide_index=True
         )
 
@@ -1357,8 +1531,7 @@ if uploaded_file is not None:
         )
 
         with st.spinner(
-            "Validating data and "
-            "generating predictions..."
+            "Validating data and generating predictions..."
         ):
 
             prediction_result, duplicate_count = (
@@ -1414,14 +1587,12 @@ if uploaded_file is not None:
 
         c1, c2, c3, c4 = st.columns(4)
 
-
         with c1:
 
             st.metric(
                 "Total Predicted Orders",
                 f"{new_total_orders:,}"
             )
-
 
         with c2:
 
@@ -1430,14 +1601,12 @@ if uploaded_file is not None:
                 f"{new_average_orders:,.2f}"
             )
 
-
         with c3:
 
             st.metric(
                 "High Demand Rows",
                 f"{new_high_demand:,}"
             )
-
 
         with c4:
 
@@ -1448,7 +1617,7 @@ if uploaded_file is not None:
 
 
         # ====================================================
-        # DEMAND DISTRIBUTION
+        # NEW MONTH DEMAND DISTRIBUTION
         # ====================================================
 
         st.subheader(
@@ -1456,13 +1625,10 @@ if uploaded_file is not None:
         )
 
         demand_counts = (
-
             prediction_result[
                 "demand_level"
             ]
-
             .value_counts()
-
             .reset_index()
         )
 
@@ -1471,23 +1637,22 @@ if uploaded_file is not None:
             "row_count"
         ]
 
-
         fig_new_demand = px.bar(
-
             demand_counts,
-
             x="demand_level",
-
             y="row_count",
-
             labels={
                 "demand_level":
                     "Demand Level",
-
                 "row_count":
                     "Number of Rows"
             },
-
+            color="demand_level",
+            color_discrete_map={
+                "High": "#EF4444",
+                "Medium": "#F59E0B",
+                "Low": "#22C55E"
+            },
             title="Predicted Demand Level Distribution"
         )
 
@@ -1510,13 +1675,10 @@ if uploaded_file is not None:
         )
 
         new_risk_counts = (
-
             prediction_result[
                 "potential_waste_risk"
             ]
-
             .value_counts()
-
             .reset_index()
         )
 
@@ -1525,27 +1687,23 @@ if uploaded_file is not None:
             "row_count"
         ]
 
-
         fig_new_risk = px.bar(
-
             new_risk_counts,
-
             x="potential_waste_risk",
-
             y="row_count",
-
             labels={
                 "potential_waste_risk":
                     "Risk Level",
-
                 "row_count":
                     "Number of Rows"
             },
-
-            title=(
-                "Potential Food-Waste "
-                "Risk Distribution"
-            )
+            color="potential_waste_risk",
+            color_discrete_map={
+                "High Risk": "#EF4444",
+                "Medium Risk": "#F59E0B",
+                "Low Risk": "#22C55E"
+            },
+            title="Potential Food-Waste Risk Distribution"
         )
 
         fig_new_risk.update_layout(
@@ -1567,9 +1725,7 @@ if uploaded_file is not None:
         )
 
         top_new_meals = (
-
             prediction_result
-
             .groupby(
                 [
                     "meal_id",
@@ -1577,67 +1733,48 @@ if uploaded_file is not None:
                     "cuisine"
                 ],
                 as_index=False
-            )
-
-            [
+            )[
                 "predicted_num_orders"
             ]
-
             .sum()
-
             .sort_values(
                 "predicted_num_orders",
                 ascending=False
             )
-
             .head(10)
-
             .copy()
         )
 
         top_new_meals["meal_label"] = (
-
             "Meal "
-
             + top_new_meals[
                 "meal_id"
             ].astype(str)
-
             + " | "
-
             + top_new_meals[
                 "category"
             ]
         )
 
-
         fig_new_meals = px.bar(
-
             top_new_meals.sort_values(
                 "predicted_num_orders",
                 ascending=True
             ),
-
             x="predicted_num_orders",
-
             y="meal_label",
-
             orientation="h",
-
             hover_data=[
                 "meal_id",
                 "category",
                 "cuisine"
             ],
-
             labels={
                 "predicted_num_orders":
                     "Predicted Orders",
-
                 "meal_label":
                     "Meal"
             },
-
             title="Top 10 Predicted Meals"
         )
 
@@ -1660,20 +1797,17 @@ if uploaded_file is not None:
         )
 
         high_risk_new = (
-
             prediction_result[
                 prediction_result[
                     "potential_waste_risk"
                 ]
                 == "High Risk"
             ]
-
             .sort_values(
                 "predicted_num_orders",
                 ascending=False
             )
         )
-
 
         if high_risk_new.empty:
 
@@ -1686,9 +1820,7 @@ if uploaded_file is not None:
 
             st.dataframe(
                 high_risk_new.head(20),
-
                 width="stretch",
-
                 hide_index=True
             )
 
@@ -1703,9 +1835,7 @@ if uploaded_file is not None:
 
         st.dataframe(
             prediction_result,
-
             width="stretch",
-
             hide_index=True
         )
 
@@ -1720,20 +1850,12 @@ if uploaded_file is not None:
             .encode("utf-8")
         )
 
-
         st.download_button(
-
             label="⬇️ Download Prediction Results",
-
             data=csv_data,
-
-            file_name=(
-                "new_month_predictions.csv"
-            ),
-
+            file_name="new_month_predictions.csv",
             mime="text/csv"
         )
-
 
     except Exception as e:
 
@@ -1752,8 +1874,9 @@ if uploaded_file is not None:
 
 st.markdown("---")
 
-st.header(
-    "📋 Dashboard Data Summary"
+st.markdown(
+    '<div class="section-title">📋 Dashboard Data Summary</div>',
+    unsafe_allow_html=True
 )
 
 summary_col1, summary_col2, summary_col3 = (
@@ -1799,13 +1922,13 @@ st.markdown("---")
 
 st.info(
     """
-    **Project Note:** Potential food-waste risk is a predictive
-    risk indicator derived from demand analytics.
+**Project Note:** Potential food-waste risk is a predictive
+risk indicator derived from demand analytics.
 
-    It should not be interpreted as an actual percentage of
-    food wasted because prepared quantity and actual waste
-    quantity are not directly available in the current dataset.
-    """
+It should not be interpreted as an actual percentage of
+food wasted because prepared quantity and actual waste
+quantity are not directly available in the current dataset.
+"""
 )
 
 

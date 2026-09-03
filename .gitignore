@@ -14,7 +14,7 @@ data/raw/train.csv
 data/raw/food_Demand_test.csv
 
 # Trained models
-models/*.pkl
+
 
 # Generated outputs
 outputs/analytics/prediction_analytics_dataset.csv
