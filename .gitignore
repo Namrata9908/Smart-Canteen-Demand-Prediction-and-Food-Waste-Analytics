@@ -18,6 +18,13 @@ models/*.pkl
 
 # Generated outputs
 outputs/analytics/prediction_analytics_dataset.csv
+outputs/new_month/*.csv
+
+# New month demo/input data
+data/new_month/*.csv
+
+# Dashboard backup
+src/dashboard/08_dashboard_backup.py
 
 # OS files
 .DS_Store
